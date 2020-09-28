@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>个金生活家</title>
+  <style>
+    .login-qrcode {
+      width: 300px;
+      height: 300px;
+      display: block;
+      margin: 20px auto;
+    }
+
+    [v-cloak] {
+      visibility: hidden;
+    }
+  </style>
+</head>
+<body>
+  <div id="app" v-cloak>
+    <img v-if="!user" class="login-qrcode" src="{{ qrlink }}"/>
+    <div v-else>
+      你已经绑定成功了
+    </div>
+  </div>
+  
+  <script src="https://cdn.staticfile.org/axios/0.20.0/axios.min.js"></script>
+  <script src="https://cdn.staticfile.org/vue/2.6.9/vue.min.js"></script>
+  <script>
+    var loginCode = '{{loginCode}}';
+    var user = '{{user | safe}}';
+    var vm = new Vue({
+      el: '#app',
+      delimiters: ['${', '}'],
+      data: {
+        loginCode: loginCode,
+        cd: null,
+        user: null
+      },
+      methods: {
+        // 轮训用户的状态
+        queryBindStatus: function() {
+          var self = this;
+          axios.get('/queryLoginStatus', {
+            params: {
+              loginCode: this.loginCode
+            }
+          }).then(function(res) {
+            const data = res.data
+            if (data.code) {
+              return;
+            }
+
+            if (self.cd) {
+              clearInterval(self.cd);
+            }
+
+            self.user = data.data;
+            alert(data.msg);
+          });
+        }
+      },
+      mounted: function() {
+        var self = this;
+        if (user) {
+          self.user = JSON.parse(user);
+        } else {
+          this.cd = setInterval(function() {
+            self.queryBindStatus();
+          }, 1500);
+        }
+      }
+    });
+  </script>
+</body>
+</html>
