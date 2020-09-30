@@ -3,11 +3,9 @@
 const WechatAPI = require('co-wechat-api');
 const Wechat = require('co-wechat');
 const OAuth = require('co-wechat-oauth');
-const CryptoJS = require('crypto-js');
-const { redis } = require('../../config/plugin');
-
 
 module.exports = app => {
+  // 初始化微信配置
   const wechatConfig = app.config.wechat;
   const oauthApi = new OAuth(wechatConfig.appid, wechatConfig.appsecret, async function(openid) {
     const txt = await app.redis.get('wechat_token_' + openid);
@@ -24,11 +22,11 @@ module.exports = app => {
 
   class HomeController extends app.Controller {
     async index() {
-      const { ctx, app } = this;
+      const { ctx } = this;
       // 1. 判断是否有 session
       let loginCode = '';
       if (!ctx.session.user) {
-        loginCode = CryptoJS.MD5(Date.now().toString() + Math.random()).toString().toUpperCase();
+        loginCode = ctx.service.crypto.md5(Date.now().toString() + Math.random());
         await ctx.render('web.html', {
           qrlink: await this.getQrcode(`LOGIN:${loginCode}`),
           loginCode,
@@ -43,12 +41,69 @@ module.exports = app => {
         user: JSON.stringify(ctx.session.user),
       });
       return;
-      // 2. 如果没有 session，则 H5 默认授权，PC 展示微信登录二维码
-      // 3. 如果有 session
-      // 3.1 获取用户历史的推送码信息
-      // 3.2 如果有历史推送码，则展示推送码
-      // 3.3 如果没有，则展示按钮，引导生成推送码
-      ctx.body = 'hi, my name dingjunbin';
+    }
+
+    async send() {
+      const { ctx } = this;
+      const { title, code, content = '' } = { ...ctx.query, ...ctx.request.body };
+      if (!title || !code) {
+        ctx.body = {
+          code: 1,
+          msg: '参数校验错误',
+        };
+        return;
+      }
+
+      const topic = await ctx.model.Topic.findOne({
+        where: {
+          code,
+        },
+      });
+
+      if (!topic) {
+        ctx.body = {
+          code: 1,
+          msg: '非法请求',
+        };
+        return;
+      }
+      const pubLog = await ctx.model.TopicPubLog.create({
+        topic_id: topic.id,
+        title,
+        content,
+      });
+
+      const user = await ctx.model.User.findOne({
+        id: topic.user_id,
+      });
+
+      this.sendTemplate({
+        pubId: pubLog.id,
+        title,
+        openid: user.openid,
+        content: pubLog.content,
+      });
+
+      ctx.body = {
+        code: 0,
+        msg: '发送成功',
+      };
+    }
+
+    // 获取用户的默认 Topic
+    async queryUserDefaultTopic() {
+      const { ctx } = this;
+      const TopicModel = ctx.model.Topic;
+      const user = ctx.session.user;
+      const topic = await ctx.service.topic.findSingleOrCreateByUser({
+        user_id: user.id,
+        type: TopicModel.TYPE_SINGLE,
+      });
+
+      ctx.body = {
+        code: 0,
+        data: topic,
+      };
     }
 
     // 轮训登录绑定状态
@@ -136,37 +191,79 @@ module.exports = app => {
       }
     }
 
+    // 获取推送信息详情
+    async topicPubDetail() {
+      const { ctx } = this;
+      const TopicPubLogModel = ctx.model.TopicPubLog;
+      if (!ctx.query.id) {
+        ctx.body = {
+          code: 1,
+          msg: '非法请求',
+        };
+        return;
+      }
+      const pubLog = await TopicPubLogModel.findOne({
+        where: {
+          id: ctx.query.id,
+        },
+      });
+
+      if (!pubLog) {
+        ctx.body = {
+          code: 1,
+          msg: '非法请求',
+        };
+        return;
+      }
+
+      ctx.body = `
+  <!DOCTYPE html>
+  <html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>个金生活家</title>
+  </head>
+  <body>
+  <p>${pubLog.title}</p>
+  <p>${pubLog.content}</p>
+  </body>
+  </html>
+      `;
+    }
+
     // 发送短信模板
-    async sendTemplate() {
-      const { ctx, app } = this;
+    async sendTemplate(info) {
+      const { app, logger } = this;
       // const abx = await api.getAllPrivateTemplate();
 
       // ctx.body = abx;
       // return;
-      const templateId = '3nV8-pQhNVHxNsTniXWBQruPob85BwHu-UDDhz1AqVE';
+      const templateId = wechatConfig.templateWarning;
       // URL置空，则在发送后,点击模板消息会进入一个空白页面（ios）, 或无法点击（android）
-      const url = `${app.config.domain}/wx/hi`;
+      const url = `${app.config.domain}/topicPubDetail?id=${info.pubId}`;
+      logger.info('发送模板消息为：%j', { ...info, url });
       const data = {
         first: {
-          value: '',
+          value: info.title.length > 50 ? info.title.slice(0, 50) + '...' : info.title,
           color: '#333',
         },
         keyword1: {
-          value: '日常告警',
+          value: '告警通知',
           color: '#333',
         },
         keyword2: {
-          value: '高级',
+          value: '高',
           color: '#DD443C',
         },
         remark: {
-          value: '请点击查看详情',
+          value: info.content.length > 100 ? info.content.slice(0, 100) + '...' : info.content,
           color: '#333',
         },
       };
-      const res = await api.sendTemplate('oIs2d04qvlfLtdrkPL82NwmG0e8Q', templateId, url, '#333', data);
-      ctx.logger.info('推送模板消息成功: %j', res);
-      ctx.body = res;
+      const res = await api.sendTemplate(info.openid, templateId, url, '#333', data);
+      logger.info('推送模板消息成功: %j', res);
+      return res;
     }
   }
 

@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://cdn.staticfile.org/ant-design-vue/1.5.0/antd.min.css">
   <title>个金生活家</title>
   <style>
     .login-qrcode {
@@ -15,18 +16,69 @@
     [v-cloak] {
       visibility: hidden;
     }
+
+    .topic-container {
+      margin: 0 auto;
+      width: 750px;
+    }
+
+    .code {
+      margin: 8px 0;
+      padding: 8px 12px;
+      background: #ECF0F1;
+      display: block;
+    }
+
+    p.section {
+      margin-top: 20px;
+      font-size: 16px;
+      color: #333;
+    }
   </style>
 </head>
 <body>
   <div id="app" v-cloak>
     <img v-if="!user" class="login-qrcode" src="{{ qrlink }}"/>
-    <div v-else>
-      你已经绑定成功了
+    <div v-else class="topic-container">
+      <p class="section">发送消息非常简单，只需要向以下URL发一个GET或者POST请求：</p>
+      <code class="code">
+        ${ sendUrl }
+      </code>
+      <p class="section">
+        接受两个参数：
+      </p>
+      <ul>
+        <li>title：消息标题，最长为200个字，必填。</li>
+        <li>content：消息内容，最长1000个字，可空。</li>
+      </ul>
+      <p class="section">
+        最简单的消息发送方式是通过浏览器，在地址栏输入以下URL，回车后即可发送：
+      </p>
+      <code class="code">
+        ${ sendUrl }&title=兄弟该吃肉啦~
+      </code>
+      <a-form-model ref="form" :model="form" :rules="rules" label-width="120px" v-bind="layout">
+        <a-form-model-item required label="标题">
+          <a-input v-model="form.title" />
+        </a-form-model-item>
+        <a-form-model-item label="内容">
+          <a-input v-model="form.content" type="textarea" rows="6" />
+        </a-form-model-item>
+        <a-form-model-item :wrapper-col="{ span: 16, offset: 4 }">
+          <a-button
+            :loading="submiting"
+            type="primary"
+            style="margin-right: 12px;"
+            @click="handleSubmit">发送消息</a-button>
+        </a-form-model-item>
+      </a-form-model>
     </div>
   </div>
   
   <script src="https://cdn.staticfile.org/axios/0.20.0/axios.min.js"></script>
   <script src="https://cdn.staticfile.org/vue/2.6.9/vue.min.js"></script>
+  <script src="https://cdn.staticfile.org/ant-design-vue/1.6.5/antd.min.js"></script>
+
   <script>
     var loginCode = '{{loginCode}}';
     var user = '{{user | safe}}';
@@ -36,9 +88,64 @@
       data: {
         loginCode: loginCode,
         cd: null,
-        user: null
+        user: null,
+        form: {
+          title: '',
+          content: '',
+        },
+        layout: {
+          labelCol: { span: 4 },
+          wrapperCol: { span: 14 }
+        },
+        submiting: false,
+        topic: null,
+        sendUrl: '',
+        rules: {
+          title: [
+            { required: true, message: '请输入标题', trigger: 'blur' },
+            { max: 200, message: '标题最长200字符', trigger: 'blur' },
+          ],
+          content: [
+            { max: 1000, message: '标题最长1000字符', trigger: 'blur' },
+          ]
+        }
       },
       methods: {
+        queryDefaultTopic: function() {
+          var self = this;
+          axios.get('/queryUserDefaultTopic').then(function(res) {
+            var resp = res.data;
+            if (resp.code) {
+              self.$message.error(resp.msg);
+              return;
+            }
+
+            self.topic = resp.data;
+            self.sendUrl = location.origin + '/send?code=' + self.topic.code
+          });
+        },
+        // 发送消息
+        handleSubmit: function() {
+          var self = this;
+          self.submiting = true;
+          this.$refs.form.validate(valid => {
+            if (!valid) {
+              self.submiting = false;
+              return false;
+            }
+
+            axios.post(self.sendUrl, this.form).then(function(res) {
+              self.submiting = false;
+              var resp = res.data;
+              if (resp.code) {
+                self.$message.error(resp.msg);
+                return;
+              }
+
+              self.$message.success(resp.msg);
+            });
+          });
+        },
         // 轮训用户的状态
         queryBindStatus: function() {
           var self = this;
@@ -65,6 +172,7 @@
         var self = this;
         if (user) {
           self.user = JSON.parse(user);
+          self.queryDefaultTopic();
         } else {
           this.cd = setInterval(function() {
             self.queryBindStatus();

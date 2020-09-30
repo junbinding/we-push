@@ -50,8 +50,24 @@ class WechatService extends Service {
 
   // 微信用户注册
   async wechatUserRegister(info = {}) {
-    const { ctx } = this;
-    ctx.model.User.upsert(info);
+    const { ctx, logger } = this;
+    const [ user ] = await ctx.model.User.findOrCreate({
+      where: {
+        openid: info.openid,
+      },
+      defaults: info,
+    });
+
+    // 给用户默认创建一个个人Topic
+    try {
+      await ctx.service.topic.findSingleOrCreateByUser({
+        user_id: user.id,
+      });
+    } catch (e) {
+      logger.error(e);
+    }
+
+    return user;
   }
 }
 
