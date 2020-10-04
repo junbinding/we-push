@@ -46,13 +46,18 @@ module.exports = app => {
     async send() {
       const { ctx } = this;
       const { title, code, content = '' } = { ...ctx.query, ...ctx.request.body };
-      if (!title || !code) {
-        ctx.body = {
-          code: 1,
-          msg: '参数校验错误',
-        };
-        return;
-      }
+
+      const rules = {
+        title: [
+          { required: true, message: '请输入标题', trigger: 'blur' },
+          { max: 200, message: '标题最长200字符', trigger: 'blur' },
+        ],
+        content: [
+          { max: 1000, message: '标题最长1000字符', trigger: 'blur' },
+        ],
+      };
+
+      await ctx.verify(rules, { ...ctx.query, ...ctx.request.body });
 
       const topic = await ctx.model.Topic.findOne({
         where: {
@@ -67,10 +72,11 @@ module.exports = app => {
         };
         return;
       }
+
       const pubLog = await ctx.model.TopicPubLog.create({
         topic_id: topic.id,
-        title,
-        content,
+        title: title.trim().slice(0, 200),
+        content: content.trim().slice(0, 1000),
       });
 
       const user = await ctx.model.User.findOne({
@@ -123,6 +129,7 @@ module.exports = app => {
         where: {
           openid: openId,
         },
+        attributes: { exclude: [ 'openid' ] },
       });
 
       if (!user) {
@@ -216,6 +223,7 @@ module.exports = app => {
         return;
       }
 
+      console.log(ctx.helper.escape(pubLog.content));
       ctx.body = `
   <!DOCTYPE html>
   <html lang="en">
@@ -225,8 +233,8 @@ module.exports = app => {
     <title>个金生活家</title>
   </head>
   <body>
-  <p>${pubLog.title}</p>
-  <p>${pubLog.content}</p>
+  <p>${ctx.helper.escape(pubLog.title)}</p>
+  <p>${ctx.helper.escape(pubLog.content).replace(/\n/g, '<br>')}</p>
   </body>
   </html>
       `;

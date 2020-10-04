@@ -34,6 +34,12 @@
       font-size: 16px;
       color: #333;
     }
+
+    .debug-container {
+      margin-top: 36px;
+      padding: 12px 24px;
+      background-color: #FFFBE6;
+    }
   </style>
 </head>
 <body>
@@ -57,21 +63,27 @@
       <code class="code">
         ${ sendUrl }&title=兄弟该吃肉啦~
       </code>
-      <a-form-model ref="form" :model="form" :rules="rules" label-width="120px" v-bind="layout">
-        <a-form-model-item required label="标题">
-          <a-input v-model="form.title" />
+      
+      <div class="debug-container">
+        <a-form-model-item :wrapper-col="{ span: 22, offset: 2 }">
+          <h2>调试工具</h2>
         </a-form-model-item>
-        <a-form-model-item label="内容">
-          <a-input v-model="form.content" type="textarea" rows="6" />
-        </a-form-model-item>
-        <a-form-model-item :wrapper-col="{ span: 16, offset: 4 }">
-          <a-button
-            :loading="submiting"
-            type="primary"
-            style="margin-right: 12px;"
-            @click="handleSubmit">发送消息</a-button>
-        </a-form-model-item>
-      </a-form-model>
+        <a-form-model ref="form" :model="form" :rules="rules" label-width="120px" v-bind="layout">
+          <a-form-model-item required label="标题">
+            <a-input v-model="form.title" />
+          </a-form-model-item>
+          <a-form-model-item label="内容">
+            <a-input v-model="form.content" type="textarea" rows="6" />
+          </a-form-model-item>
+          <a-form-model-item :wrapper-col="{ span: 22, offset: 2 }">
+            <a-button
+              :loading="submiting"
+              type="danger"
+              style="margin-right: 12px;"
+              @click="handleSubmit">发送消息</a-button>
+          </a-form-model-item>
+        </a-form-model>
+      </div>
     </div>
   </div>
   
@@ -94,8 +106,8 @@
           content: '',
         },
         layout: {
-          labelCol: { span: 4 },
-          wrapperCol: { span: 14 }
+          labelCol: { span: 2 },
+          wrapperCol: { span: 22 }
         },
         submiting: false,
         topic: null,
@@ -164,7 +176,8 @@
             }
 
             self.user = data.data;
-            alert(data.msg);
+            self.queryDefaultTopic();
+            self.$message.success(data.msg);
           });
         }
       },

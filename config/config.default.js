@@ -1,6 +1,8 @@
 /* eslint valid-jsdoc: "off" */
 
 'use strict';
+const CommonError = require('../app/error/commonError');
+
 
 /**
  * @param {Egg.EggAppInfo} appInfo app info
@@ -94,6 +96,31 @@ module.exports = appInfo => {
       freezeTableName: true,
       createdAt: 'created_at',
       updatedAt: 'updated_at',
+    },
+  };
+
+  config.onerror = {
+    html(err, ctx) {
+      // html hander
+      ctx.body = `<h1>${err.message}</h1>`;
+      ctx.status = 500;
+    },
+    json(err, ctx) {
+      // json hander
+      if (err instanceof CommonError) {
+        ctx.body = {
+          code: err.code,
+          msg: err.message,
+        };
+        ctx.status = 200;
+        return;
+      }
+      ctx.body = {
+        code: 100000,
+        msg: '系统服务异常',
+      };
+
+      ctx.status = 200;
     },
   };
 
