@@ -10,7 +10,7 @@
       width: 300px;
       height: 300px;
       display: block;
-      margin: 20px auto;
+      margin: 80px auto 40px;
     }
 
     [v-cloak] {
@@ -40,11 +40,29 @@
       padding: 12px 24px;
       background-color: #FFFBE6;
     }
+
+    .login-block {
+      position: absolute; 
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, .8);
+      text-align: center;
+    }
+
+    .login-tips {
+      color: #FF8B8B;
+      font-size: 16px;
+      font-weight: bold;
+      margin-top: 24px;
+    }
   </style>
 </head>
 <body>
   <div id="app" v-cloak>
-    <img v-if="!user" class="login-qrcode" src="{{ qrlink }}"/>
+    <div class="login-block" v-if="!user">
+      <img class="login-qrcode" src="{{ qrlink }}"/>
+      <p class="login-tips">请扫描二维码，关注公众号进行登录！</p>
+    </div>
     <div v-else class="topic-container">
       <p class="section">发送消息非常简单，只需要向以下URL发一个GET或者POST请求：</p>
       <code class="code">

@@ -2,7 +2,7 @@
 
 'use strict';
 const CommonError = require('../app/error/commonError');
-
+require('dotenv').config();
 
 /**
  * @param {Egg.EggAppInfo} appInfo app info
@@ -59,7 +59,7 @@ module.exports = appInfo => {
   };
 
   const userConfig = {
-    domain: 'https://d.frp.ik47.com',
+    domain: 'https://demo.2k71.com',
     qrlink: 'https://wenhairu.com/static/api/qr/?size=300&text=',
   };
 
@@ -69,9 +69,13 @@ module.exports = appInfo => {
     client: {
       port: 6379, // Redis port
       host: '127.0.0.1', // Redis host
-      password: ',NodeTutorial!Redis',
+      password: process.env.redisPwd,
       db: 0,
     },
+  };
+
+  config.queue = {
+    msgcenter: 'MSG_CENTER',
   };
 
   config.sequelize = {
@@ -79,7 +83,7 @@ module.exports = appInfo => {
     host: '127.0.0.1',
     port: 3306,
     username: 'root',
-    password: ',NodeTutorial!Mysql',
+    password: process.env.mysqlPwd,
     database: 'tutorial',
     timezone: '+08:00',
     dialectOptions: {

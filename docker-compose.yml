@@ -1,6 +1,19 @@
 version: '3'
 
 services:
+  nginx:
+    restart: always
+    image: nginx
+    container_name: nginx
+    ports:
+      - 80:80
+      - 443:443
+    network_mode: "host"
+    volumes:
+      - ./server/nginx/cert:/etc/nginx/conf.d
+      - ./server/nginx/conf/nginx.conf:/etc/nginx/nginx.conf
+      - ./server/nginx/html:/usr/share/nginx/wwwroot
+
   redis:
     image: "redis:alpine"
     command: redis-server --requirepass ${redisPwd}
@@ -13,8 +26,8 @@ services:
     ports:
       - 3306:3306
     volumes:
-      - /Users/mac/Projects/web/node-tutorial/mysql/data:/var/lib/mysql
-      - /Users/mac/Projects/web/node-tutorial/mysql/conf:/etc/mysql/conf.d
+      - ./server/mysql/data:/var/lib/mysql
+      - ./server/mysql/conf:/etc/mysql/conf.d
     environment:
       - MYSQL_ROOT_PASSWORD=${mysqlPwd}
       - TZ=Asia/Shanghai

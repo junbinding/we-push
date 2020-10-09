@@ -44,6 +44,11 @@ class WechatService extends Service {
       openid: event.FromUserName,
     });
     const firstLoginKey = event.EventKey.slice(event.EventKey.indexOf(loginKey) + loginKey.length);
+    const redisKey = `${app.config.wechat.loginKey}${firstLoginKey}`;
+    const redisValue = await app.redis.get(redisKey);
+    if (redisValue) {
+      return '登录二维码已失效，请重新登录';
+    }
     app.redis.set(`${app.config.wechat.loginKey}${firstLoginKey}`, event.FromUserName, 'EX', 3600);
     return '欢迎登录个金生活家!';
   }
@@ -51,6 +56,7 @@ class WechatService extends Service {
   // 微信用户注册
   async wechatUserRegister(info = {}) {
     const { ctx, logger } = this;
+    logger.info('微信用户注册 info:  %j', info);
     const [ user ] = await ctx.model.User.findOrCreate({
       where: {
         openid: info.openid,
@@ -58,11 +64,15 @@ class WechatService extends Service {
       defaults: info,
     });
 
+    logger.info('微信用户注册 user:  %j', user);
+
     // 给用户默认创建一个个人Topic
     try {
-      await ctx.service.topic.findSingleOrCreateByUser({
+      const topic = await ctx.service.topic.findSingleOrCreateByUser({
         user_id: user.id,
       });
+
+      logger.info('微信用户注册 topic %j', topic);
     } catch (e) {
       logger.error(e);
     }

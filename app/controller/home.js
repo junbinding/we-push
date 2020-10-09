@@ -21,6 +21,7 @@ module.exports = app => {
   });
 
   class HomeController extends app.Controller {
+    // 首页
     async index() {
       const { ctx } = this;
       // 1. 判断是否有 session
@@ -43,21 +44,39 @@ module.exports = app => {
       return;
     }
 
+    // 发送消息
     async send() {
-      const { ctx } = this;
+      const { ctx, app } = this;
       const { title, code, content = '' } = { ...ctx.query, ...ctx.request.body };
 
       const rules = {
+        code: [
+          { required: true, message: '非法请求' },
+        ],
         title: [
-          { required: true, message: '请输入标题', trigger: 'blur' },
-          { max: 200, message: '标题最长200字符', trigger: 'blur' },
+          { required: true, message: '请输入标题' },
+          { max: 200, message: '标题最长200字符' },
         ],
         content: [
-          { max: 1000, message: '标题最长1000字符', trigger: 'blur' },
+          { max: 1000, message: '标题最长1000字符' },
         ],
       };
 
       await ctx.verify(rules, { ...ctx.query, ...ctx.request.body });
+
+      // 比较内容
+      const contentMd5 = ctx.service.crypto.md5(JSON.stringify({ title, content }));
+      const cmpKey = `send_compare_${code}`;
+      const lastContentMd5 = await app.redis.get(cmpKey);
+      if (lastContentMd5 && lastContentMd5 === contentMd5) {
+        ctx.body = {
+          code: 1,
+          msg: '请不要发送相同的内容',
+        };
+        return;
+      }
+
+      app.redis.set(cmpKey, contentMd5, 'EX', 600);
 
       const topic = await ctx.model.Topic.findOne({
         where: {
@@ -80,7 +99,9 @@ module.exports = app => {
       });
 
       const user = await ctx.model.User.findOne({
-        id: topic.user_id,
+        where: {
+          id: topic.user_id,
+        },
       });
 
       this.sendTemplate({
@@ -150,17 +171,7 @@ module.exports = app => {
       return;
     }
 
-    async getSign() {
-      const { ctx } = this;
-      ctx.body = 'success';
-    }
-
-    async hi() {
-      const { ctx, app } = this;
-      const url = encodeURIComponent(oauthApi.getAuthorizeURL(`${app.config.domain}/wx/oauth`, 'state', 'snsapi_userinfo'));
-      ctx.body = `<img src="${app.config.qrlink}${url}"/>`;
-    }
-
+    // OAuth Demo
     async oauth() {
       const { ctx } = this;
       const token = await oauthApi.getAccessToken(ctx.query.code);
@@ -243,12 +254,8 @@ module.exports = app => {
     // 发送短信模板
     async sendTemplate(info) {
       const { app, logger } = this;
-      // const abx = await api.getAllPrivateTemplate();
 
-      // ctx.body = abx;
-      // return;
       const templateId = wechatConfig.templateWarning;
-      // URL置空，则在发送后,点击模板消息会进入一个空白页面（ios）, 或无法点击（android）
       const url = `${app.config.domain}/topicPubDetail?id=${info.pubId}`;
       logger.info('发送模板消息为：%j', { ...info, url });
       const data = {
