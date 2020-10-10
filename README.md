@@ -47,4 +47,7 @@ $ npm stop
 
 ---
 
-## 
+## 问题反馈
+有问题请联系我微信
+<br>
+<img src="https://pic.imgdb.cn/item/5f8122ef1cd1bbb86b92e642.jpg" width="340">
