@@ -5,8 +5,17 @@
 ## 快速开始
 
 ### 相关配置
-- 环境相关的配置在 `.env` 文件
+- 环境变量相关的配置在 `.env` 文件
 - 应用相关的配置在 `config/config.default.js` 文件
+- nginx 配置文件路径 `server/nginx/conf/nginx.conf`
+- mysql 配置文件路径 `server/mysql/conf/`
+
+### 项目初始化
+1. 启动 nginx、mysql、redis
+```bash
+$ docker-compose up -d
+```
+2. 导入 sql 文件，文件目录 `server/tutorial.sql`.
 
 ### 开发环境
 
