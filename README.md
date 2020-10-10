@@ -45,6 +45,9 @@ $ npm stop
 <br>
 <img src="https://pic.imgdb.cn/item/5f811d221cd1bbb86b87a9cf.jpg" width="600px" />
 
+## License
+MIT
+
 ---
 
 ## 问题反馈
