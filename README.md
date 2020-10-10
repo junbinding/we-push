@@ -10,12 +10,14 @@
 - mysql 配置文件路径 `server/mysql/conf/`
 
 ### 项目初始化
-1. 启动 nginx、mysql、redis
+1. 修改 `.env.example` 为 `.env`，并设置文件中的密码
+2. 启动 nginx、mysql、redis
 ```bash
 $ docker-compose up -d
 ```
-2. 导入 sql 文件，文件目录 `server/tutorial.sql`.
+3. 导入 sql 文件，文件目录 `server/tutorial.sql`.
 
+注：可参考 `doc/Node.js 服务器环境搭建.pdf` 来搭建服务端环境
 ### 开发环境
 
 ```bash
