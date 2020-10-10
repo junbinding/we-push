@@ -3,14 +3,6 @@
 基于 Node.js 微信推送服务
 
 ## 快速开始
-
-### 时序图
-登录流程
-<img src="https://pic.imgdb.cn/item/5f811cd71cd1bbb86b86fb16.jpg" width="400px" />
-
-消息推送
-<img src="https://pic.imgdb.cn/item/5f811d221cd1bbb86b87a9cf.jpg" width="400px" />
-
 ### 相关配置
 - 环境变量相关的配置在 `.env` 文件
 - 应用相关的配置在 `config/config.default.js` 文件
@@ -43,3 +35,16 @@ $ npm start
 # 停止生产服务
 $ npm stop
 ```
+
+## 时序图
+登录流程
+<br>
+<img src="https://pic.imgdb.cn/item/5f811cd71cd1bbb86b86fb16.jpg" width="600px" />
+
+消息推送
+<br>
+<img src="https://pic.imgdb.cn/item/5f811d221cd1bbb86b87a9cf.jpg" width="600px" />
+
+---
+
+## 
