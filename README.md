@@ -4,6 +4,13 @@
 
 ## 快速开始
 
+### 时序图
+登录流程
+![登录流程](https://pic.imgdb.cn/item/5f811cd71cd1bbb86b86fb16.jpg)
+
+消息推送
+![消息推送]](https://pic.imgdb.cn/item/5f811d221cd1bbb86b87a9cf.jpg)
+
 ### 相关配置
 - 环境变量相关的配置在 `.env` 文件
 - 应用相关的配置在 `config/config.default.js` 文件
