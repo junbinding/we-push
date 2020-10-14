@@ -42,10 +42,10 @@ module.exports = appInfo => {
 
   // 微信配置
   config.wechat = {
-    appid: 'wx6b49cff143ce2371',
-    appsecret: '39a81b8876349066c1001e68ddcd3901',
-    token: '76f252ff44508b5c7028526978dc37e4',
-    encodingAESKey: 'ZhgHzjvrYfhrYJmaoglW8gEzBiKckP53fWfrK2VgAWA',
+    appid: process.env.wxAppId,
+    appsecret: process.env.wxAppSecret,
+    token: process.env.wxToken,
+    encodingAESKey: process.env.wxAesKey,
     checkSignature: true,
     pushKey: 'wx_push_',
     pushTtl: 48 * 3600,
@@ -59,7 +59,7 @@ module.exports = appInfo => {
   };
 
   const userConfig = {
-    domain: 'https://demo.2k71.com',
+    domain: process.env.domain,
     qrlink: 'https://wenhairu.com/static/api/qr/?size=300&text=',
   };
 

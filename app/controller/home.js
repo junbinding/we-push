@@ -7,18 +7,20 @@ const OAuth = require('co-wechat-oauth');
 module.exports = app => {
   // 初始化微信配置
   const wechatConfig = app.config.wechat;
-  const oauthApi = new OAuth(wechatConfig.appid, wechatConfig.appsecret, async function(openid) {
+  // 获取缓存的 AccessToken
+  async function getAccessToken(openid) {
     const txt = await app.redis.get('wechat_token_' + openid);
     return JSON.parse(txt);
-  }, async function(openid, token) {
+  }
+  // 更新缓存 AccessToken
+  async function setAccessToken(openid, token) {
     await app.redis.set('wechat_token_' + openid, JSON.stringify(token), 'EX', 3600);
-  });
-  const api = new WechatAPI(wechatConfig.appid, wechatConfig.appsecret, async function(openid) {
-    const txt = await app.redis.get('wechat_token_' + openid);
-    return JSON.parse(txt);
-  }, async function(openid, token) {
-    await app.redis.set('wechat_token_' + openid, JSON.stringify(token), 'EX', 3600);
-  });
+  }
+
+  // 微信 OAuth
+  const oauthApi = new OAuth(wechatConfig.appid, wechatConfig.appsecret, getAccessToken, setAccessToken);
+  // 微信 API
+  const api = new WechatAPI(wechatConfig.appid, wechatConfig.appsecret, getAccessToken, setAccessToken);
 
   class HomeController extends app.Controller {
     // 首页
