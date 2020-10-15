@@ -61,7 +61,7 @@
 </head>
 <body>
   <div id="app" v-cloak>
-    <div class="login-block" v-if="!user">
+    <div class="login-block" v-show="!user">
       <div id="login-qrcode" class="login-qrcode"></div>
       <p class="login-tips">请扫描二维码，关注公众号进行登录！</p>
     </div>
