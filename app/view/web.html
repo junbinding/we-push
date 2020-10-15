@@ -60,7 +60,7 @@
 <body>
   <div id="app" v-cloak>
     <div class="login-block" v-if="!user">
-      <img class="login-qrcode" src="{{ qrlink }}"/>
+      <div id="login-qrcode" class="login-qrcode"></div>
       <p class="login-tips">请扫描二维码，关注公众号进行登录！</p>
     </div>
     <div v-else class="topic-container">
@@ -108,9 +108,19 @@
   <script src="https://cdn.staticfile.org/axios/0.20.0/axios.min.js"></script>
   <script src="https://cdn.staticfile.org/vue/2.6.9/vue.min.js"></script>
   <script src="https://cdn.staticfile.org/ant-design-vue/1.6.5/antd.min.js"></script>
+  <script src="https://cdn.staticfile.org/qrcodejs/1.0.0/qrcode.min.js"></script>
 
   <script>
     var loginCode = '{{loginCode}}';
+    var qrLink = '{{ qrlink }}';
+    var qrcode = new QRCode(document.getElementById("login-qrcode"), {
+      text: qrLink,
+      width: 300,
+      height: 300,
+      colorDark : "#000000",
+      colorLight : "#ffffff",
+      correctLevel : QRCode.CorrectLevel.H
+    });
     var user = '{{user | safe}}';
     var vm = new Vue({
       el: '#app',

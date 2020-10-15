@@ -204,7 +204,7 @@ module.exports = app => {
       try {
         const res = await api.createTmpQRCode(text, 1800);
         ctx.logger.info('生成微信二维码成功: %j', res);
-        const url = `${app.config.qrlink}${encodeURIComponent(res.url)}`;
+        const url = `${res.url}`;
         return url;
       } catch (e) {
         return '';
