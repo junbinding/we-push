@@ -11,6 +11,8 @@
       height: 300px;
       display: block;
       margin: 80px auto 40px;
+      padding: 8px;
+      background-color: #fff;
     }
 
     [v-cloak] {
@@ -113,14 +115,6 @@
   <script>
     var loginCode = '{{loginCode}}';
     var qrLink = '{{ qrlink }}';
-    var qrcode = new QRCode(document.getElementById("login-qrcode"), {
-      text: qrLink,
-      width: 300,
-      height: 300,
-      colorDark : "#000000",
-      colorLight : "#ffffff",
-      correctLevel : QRCode.CorrectLevel.H
-    });
     var user = '{{user | safe}}';
     var vm = new Vue({
       el: '#app',
@@ -215,6 +209,14 @@
           self.user = JSON.parse(user);
           self.queryDefaultTopic();
         } else {
+          var qrcode = new QRCode(document.getElementById("login-qrcode"), {
+            text: qrLink,
+            width: 284,
+            height: 284,
+            colorDark : "#000000",
+            colorLight : "#ffffff",
+            correctLevel : QRCode.CorrectLevel.H
+          });
           this.cd = setInterval(function() {
             self.queryBindStatus();
           }, 1500);
