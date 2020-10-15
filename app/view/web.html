@@ -115,6 +115,7 @@
   <script>
     var loginCode = '{{loginCode}}';
     var qrLink = '{{ qrlink }}';
+    window.qrcode = null;
     var user = '{{user | safe}}';
     var vm = new Vue({
       el: '#app',
@@ -197,6 +198,10 @@
               clearInterval(self.cd);
             }
 
+            if (window.qrcode) {
+              window.qrcode.clear();
+            }
+
             self.user = data.data;
             self.queryDefaultTopic();
             self.$message.success(data.msg);
@@ -209,7 +214,7 @@
           self.user = JSON.parse(user);
           self.queryDefaultTopic();
         } else {
-          var qrcode = new QRCode(document.getElementById("login-qrcode"), {
+          window.qrcode = new QRCode(document.getElementById("login-qrcode"), {
             text: qrLink,
             width: 284,
             height: 284,
