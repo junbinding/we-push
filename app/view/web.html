@@ -65,7 +65,7 @@
       <div id="login-qrcode" class="login-qrcode"></div>
       <p class="login-tips">请扫描二维码，关注公众号进行登录！</p>
     </div>
-    <div v-else class="topic-container">
+    <div v-if="user" class="topic-container">
       <p class="section">发送消息非常简单，只需要向以下URL发一个GET或者POST请求：</p>
       <code class="code">
         ${ sendUrl }
